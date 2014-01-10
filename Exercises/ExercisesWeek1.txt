@@ -635,8 +635,185 @@ Goodbye Albert, Brenda, Charles, Dave, Engelbert.  Come back soon!
 
 Teht3
 		
+---------------------------------------------------------
+Jos komentona pelkkä Brewery,tulee "no database" connection ilmoitus.
+yhteys tietokantaan syntyy käyttämällä aluksi esim. Brewery.count
 
+""This is NOT a bug. It's the expected behavior. Loading an Active 
+Record model won't establish a connection to the database. 
+This is desired. ActiveRecord::Base#inspect also does not establish 
+a connection if there is none. That's when you see no database 
+connection. Calling a method that needs to retrieve data like your 
+#count or #connection WILL establish a connection. That's why 
+another call to inspect will show you what fields are available.""
+----------------------------------------------------------
+irb(main):002:0> Brewery
+=> Brewery(no database connection)
+irb(main):004:0> Brewery.count
+   (0.0ms)  SELECT COUNT(*) FROM "breweries"
+=> 3
+irb(main):005:0> Brewery
+=> Brewery(id: integer, name: string, year: integer, created_at: datetime, updat
+ed_at: datetime)
+irb(main):006:0> Brewery.all
+  Brewery Load (1.0ms)  SELECT "breweries".* FROM "breweries"
+=> #<ActiveRecord::Relation [#<Brewery id: 1, name: "Koff", year: 1873, created_
+at: "2014-01-10 21:11:34", updated_at: "2014-01-10 21:11:34">, #<Brewery id: 2,
+name: "Karjala", year: 1968, created_at: "2014-01-10 21:12:04", updated_at: "201
+4-01-10 21:12:04">, #<Brewery id: 3, name: "Malmgård", year: 2001, created_at: "
+2014-01-10 21:12:50", updated_at: "2014-01-10 21:12:50">]>
+irb(main):007:0> Brewery.count
+   (0.0ms)  SELECT COUNT(*) FROM "breweries"
+=> 3
 
+irb(main):008:0> Brewery.new(:name => "Stadin panimo", :year => 1997)
+=> #<Brewery id: nil, name: "Stadin panimo", year: 1997, created_at: nil, update
+d_at: nil>
+irb(main):009:0> Brewery.all
+  Brewery Load (1.0ms)  SELECT "breweries".* FROM "breweries"
+=> #<ActiveRecord::Relation [#<Brewery id: 1, name: "Koff", year: 1873, created_
+at: "2014-01-10 21:11:34", updated_at: "2014-01-10 21:11:34">, #<Brewery id: 2,
+name: "Karjala", year: 1968, created_at: "2014-01-10 21:12:04", updated_at: "201
+4-01-10 21:12:04">, #<Brewery id: 3, name: "Malmgård", year: 2001, created_at: "
+2014-01-10 21:12:50", updated_at: "2014-01-10 21:12:50">]>
+irb(main):010:0> Brewery.count
+   (1.0ms)  SELECT COUNT(*) FROM "breweries"
+=> 3
+
+irb(main):011:0> b = Brewery.new(:name => "Stadin panimo", :year => 1997)
+=> #<Brewery id: nil, name: "Stadin panimo", year: 1997, created_at: nil, update
+d_at: nil>
+irb(main):012:0> b.save
+   (0.0ms)  begin transaction
+  SQL (15.0ms)  INSERT INTO "breweries" ("created_at", "name", "updated_at", "ye
+ar") VALUES (?, ?, ?, ?)  [["created_at", Fri, 10 Jan 2014 21:33:05 UTC +00:00],
+ ["name", "Stadin panimo"], ["updated_at", Fri, 10 Jan 2014 21:33:05 UTC +00:00]
+, ["year", 1997]]
+   (77.0ms)  commit transaction
+=> true
+irb(main):013:0> b
+=> #<Brewery id: 4, name: "Stadin panimo", year: 1997, created_at: "2014-01-10 2
+1:33:05", updated_at: "2014-01-10 21:33:05">
+irb(main):014:0> Brewery.all
+  Brewery Load (1.0ms)  SELECT "breweries".* FROM "breweries"
+=> #<ActiveRecord::Relation [#<Brewery id: 1, name: "Koff", year: 1873, created_
+at: "2014-01-10 21:11:34", updated_at: "2014-01-10 21:11:34">, #<Brewery id: 2,
+name: "Karjala", year: 1968, created_at: "2014-01-10 21:12:04", updated_at: "201
+4-01-10 21:12:04">, #<Brewery id: 3, name: "Malmgård", year: 2001, created_at: "
+2014-01-10 21:12:50", updated_at: "2014-01-10 21:12:50">, #<Brewery id: 4, name:
+ "Stadin panimo", year: 1997, created_at: "2014-01-10 21:33:05", updated_at: "20
+14-01-10 21:33:05">]>
+irb(main):015:0> Brewery.count
+   (0.0ms)  SELECT COUNT(*) FROM "breweries"
+=> 4
+
+irb(main):016:0> Brewery.find 1
+  Brewery Load (1.0ms)  SELECT "breweries".* FROM "breweries" WHERE "breweries".
+"id" = ? LIMIT 1  [["id", 1]]
+=> #<Brewery id: 1, name: "Koff", year: 1873, created_at: "2014-01-10 21:11:34",
+ updated_at: "2014-01-10 21:11:34">
+irb(main):017:0> b = Brewery.find 2
+  Brewery Load (1.0ms)  SELECT "breweries".* FROM "breweries" WHERE "breweries".
+"id" = ? LIMIT 1  [["id", 2]]
+=> #<Brewery id: 2, name: "Karjala", year: 1968, created_at: "2014-01-10 21:12:0
+4", updated_at: "2014-01-10 21:12:04">
+irb(main):018:0> b.year
+=> 1968
+irb(main):019:0> b.name
+=> "Karjala"
+irb(main):020:0> Brewery.find_by_name "Koff"
+  Brewery Load (0.0ms)  SELECT "breweries".* FROM "breweries" WHERE "breweries".
+"name" = 'Koff' LIMIT 1
+=> #<Brewery id: 1, name: "Koff", year: 1873, created_at: "2014-01-10 21:11:34",
+ updated_at: "2014-01-10 21:11:34">
+irb(main):021:0> Brewery.where :name => "Koff"
+  Brewery Load (0.0ms)  SELECT "breweries".* FROM "breweries" WHERE "breweries".
+"name" = 'Koff'
+=> #<ActiveRecord::Relation [#<Brewery id: 1, name: "Koff", year: 1873, created_
+at: "2014-01-10 21:11:34", updated_at: "2014-01-10 21:11:34">]>
+irb(main):022:0> Brewery.where :year => 1900..2000
+  Brewery Load (1.0ms)  SELECT "breweries".* FROM "breweries" WHERE ("breweries"
+."year" BETWEEN 1900 AND 2000)
+=> #<ActiveRecord::Relation [#<Brewery id: 2, name: "Karjala", year: 1968, creat
+ed_at: "2014-01-10 21:12:04", updated_at: "2014-01-10 21:12:04">, #<Brewery id:
+4, name: "Stadin panimo", year: 1997, created_at: "2014-01-10 21:33:05", updated
+_at: "2014-01-10 21:33:05">]>
+
+irb(main):023:0> b = Brewery.where :name => "Koff"
+  Brewery Load (1.0ms)  SELECT "breweries".* FROM "breweries" WHERE "breweries".
+"name" = 'Koff'
+=> #<ActiveRecord::Relation [#<Brewery id: 1, name: "Koff", year: 1873, created_
+at: "2014-01-10 21:11:34", updated_at: "2014-01-10 21:11:34">]>
+irb(main):024:0> b.year
+NoMethodError: undefined method `year' for #<ActiveRecord::Relation::ActiveRecor
+d_Relation_Brewery:0x00000006a03330>
+        from C:/Ruby200-x64/lib/ruby/gems/2.0.0/gems/activerecord-4.0.2/lib/acti
+ve_record/relation/delegation.rb:121:in `method_missing'
+        from C:/Ruby200-x64/lib/ruby/gems/2.0.0/gems/activerecord-4.0.2/lib/acti
+ve_record/relation/delegation.rb:68:in `method_missing'
+        from (irb):24
+        from C:/Ruby200-x64/lib/ruby/gems/2.0.0/gems/railties-4.0.2/lib/rails/co
+mmands/console.rb:90:in `start'
+        from C:/Ruby200-x64/lib/ruby/gems/2.0.0/gems/railties-4.0.2/lib/rails/co
+mmands/console.rb:9:in `start'
+        from C:/Ruby200-x64/lib/ruby/gems/2.0.0/gems/railties-4.0.2/lib/rails/co
+mmands.rb:62:in `<top (required)>'
+        from bin/rails:4:in `require'
+        from bin/rails:4:in `<main>'
+irb(main):025:0> t = Brewery.where :name => "Koff"
+  Brewery Load (0.0ms)  SELECT "breweries".* FROM "breweries" WHERE "breweries".
+"name" = 'Koff'
+=> #<ActiveRecord::Relation [#<Brewery id: 1, name: "Koff", year: 1873, created_
+at: "2014-01-10 21:11:34", updated_at: "2014-01-10 21:11:34">]>
+irb(main):026:0> t.first.year
+=> 1873
+
+---------------------------------------------------------
+tehtävä 4
+
+irb(main):027:0> Brewery.create(name: "Kumpulan panimo", year: 2012)
+   (0.0ms)  begin transaction
+  SQL (3.0ms)  INSERT INTO "breweries" ("created_at", "name", "updated_at", "yea
+r") VALUES (?, ?, ?, ?)  [["created_at", Fri, 10 Jan 2014 22:06:36 UTC +00:00],
+["name", "Kumpulan panimo"], ["updated_at", Fri, 10 Jan 2014 22:06:36 UTC +00:00
+], ["year", 2012]]
+   (397.0ms)  commit transaction
+=> #<Brewery id: 5, name: "Kumpulan panimo", year: 2012, created_at: "2014-01-10
+ 22:06:36", updated_at: "2014-01-10 22:06:36">
+irb(main):028:0> Brewery.find_by_name "Kumpulan panimo"
+  Brewery Load (1.0ms)  SELECT "breweries".* FROM "breweries" WHERE "breweries".
+"name" = 'Kumpulan panimo' LIMIT 1
+=> #<Brewery id: 5, name: "Kumpulan panimo", year: 2012, created_at: "2014-01-10
+ 22:06:36", updated_at: "2014-01-10 22:06:36">
+irb(main):029:0> b = Brewery.find_by_name "Kumpulan panimo"
+  Brewery Load (1.0ms)  SELECT "breweries".* FROM "breweries" WHERE "breweries".
+"name" = 'Kumpulan panimo' LIMIT 1
+=> #<Brewery id: 5, name: "Kumpulan panimo", year: 2012, created_at: "2014-01-10
+ 22:06:36", updated_at: "2014-01-10 22:06:36">
+irb(main):030:0> b.update(year: 2013)
+   (0.0ms)  begin transaction
+  SQL (5.0ms)  UPDATE "breweries" SET "year" = ?, "updated_at" = ? WHERE "brewer
+ies"."id" = 5  [["year", 2013], ["updated_at", Fri, 10 Jan 2014 22:09:47 UTC +00
+:00]]
+   (74.0ms)  commit transaction
+=> true
+irb(main):031:0> Brewery.find_by_name "Kumpulan panimo"
+  Brewery Load (1.0ms)  SELECT "breweries".* FROM "breweries" WHERE "breweries".
+"name" = 'Kumpulan panimo' LIMIT 1
+=> #<Brewery id: 5, name: "Kumpulan panimo", year: 2013, created_at: "2014-01-10
+ 22:06:36", updated_at: "2014-01-10 22:09:47">
+irb(main):032:0> b = Brewery.find_by_name "Kumpulan panimo"
+  Brewery Load (1.0ms)  SELECT "breweries".* FROM "breweries" WHERE "breweries".
+"name" = 'Kumpulan panimo' LIMIT 1
+=> #<Brewery id: 5, name: "Kumpulan panimo", year: 2013, created_at: "2014-01-10
+ 22:06:36", updated_at: "2014-01-10 22:09:47">
+irb(main):033:0> b.destroy
+   (0.0ms)  begin transaction
+  SQL (3.0ms)  DELETE FROM "breweries" WHERE "breweries"."id" = ?  [["id", 5]]
+   (78.0ms)  commit transaction
+=> #<Brewery id: 5, name: "Kumpulan panimo", year: 2013, created_at: "2014-01-10
+ 22:06:36", updated_at: "2014-01-10 22:09:47">
+----------------------------------------------------------
 
 
 
